@@ -1,28 +1,33 @@
 import pytest
 from selenium import webdriver
-
+from selenium.webdriver.chrome.options import Options
 
 def pytest_addoption(parser):
-    parser.addoption('--language_name', action='store', default=None,
-                     help="Choose language: ru or en")
-
-
-
-@pytest.fixture(scope="function")
-def language(request):
-    language_name = request.config.getoption("language_name")
-    if language_name == "es":
-        language_name = "es"
-    elif language_name == "en":
-        language_name = "en-gb"
-    link = f"http://selenium1py.pythonanywhere.com/{language_name}/catalogue/coders-at-work_207/"
-    browser.get(link)
-
+    parser.addoption('--browser_name',\
+                     action='store',\
+                     default='chrome',\
+                     help='Choose browser: chrome or firefox')
+    parser.addoption('--language',\
+                     action="store",\
+                     default=None,\
+                     help="Choose from langs: (en/ru/es/...)")
 
 @pytest.fixture(scope="function")
-def browser():
-    print("\nstart chrome browser for test..")
-    browser = webdriver.Chrome()
+def browser(request):
+    browser_name = request.config.getoption("browser_name")
+    user_language = request.config.getoption("language")
+    if (browser_name == "chrome"):
+        options = Options()
+        options.add_experimental_option('prefs', {'intl.accept_languages': user_language})
+        print("\n\nStart Chrome for test...")
+        browser = webdriver.Chrome(options=options)
+    elif (browser_name == "firefox"):
+        fp = webdriver.FirefoxProfile()
+        fp.set_preference("intl.accept_languages",user_language)
+        print("\n\nStart FireFox for test...")
+        browser = webdriver.Firefox(firefox_profile=fp)
+    else:
+        print("Browser<browser_name> still is not implemented")
     yield browser
-    print("\nquit browser..")
+    print("\nQuit browser...")
     browser.quit()
